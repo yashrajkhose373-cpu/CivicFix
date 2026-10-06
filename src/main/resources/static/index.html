@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudySync — Ultimate Student Workspace & Productivity OS</title>
+    <meta name="description" content="A comprehensive student workspace to manage tasks, assignments, pomodoro study sessions, subjects, grade tracking, and study notes.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Canvas Confetti for Celebration on Task Complete -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="theme-dark">
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-logo">
+                    <div class="logo-icon">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <div class="brand-text">
+                        <h2>Study<span>Sync</span> <span class="badge-pro">PRO</span></h2>
+                        <p class="tagline">Student Workspace</p>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-group-title">WORKSPACE</div>
+                <button class="nav-item active" id="nav-dashboard" onclick="app.switchTab('dashboard')">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item" id="nav-tasks" onclick="app.switchTab('tasks')">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>Tasks & To-Dos</span>
+                    <span class="nav-badge" id="badge-pending-tasks">0</span>
+                </button>
+                <button class="nav-item" id="nav-kanban" onclick="app.switchTab('kanban')">
+                    <i class="fa-solid fa-table-columns"></i>
+                    <span>Kanban Board</span>
+                </button>
+                <button class="nav-item" id="nav-assignments" onclick="app.switchTab('assignments')">
+                    <i class="fa-solid fa-file-signature"></i>
+                    <span>Assignments</span>
+                    <span class="nav-badge alert" id="badge-assignments">0</span>
+                </button>
+                <button class="nav-item" id="nav-deadlines" onclick="app.switchTab('deadlines')">
+                    <i class="fa-solid fa-clock"></i>
+                    <span>Deadlines</span>
+                    <span class="nav-badge danger" id="badge-overdue">0</span>
+                </button>
+                
+                <div class="nav-group-title">STUDY TOOLS</div>
+                <button class="nav-item" id="nav-pomodoro" onclick="app.switchTab('pomodoro')">
+                    <i class="fa-solid fa-stopwatch"></i>
+                    <span>Focus Timer</span>
+                    <span class="nav-badge pulse" id="pomo-nav-badge">25:00</span>
+                </button>
+                <button class="nav-item" id="nav-notes" onclick="app.switchTab('notes')">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                    <span>Study Notes</span>
+                </button>
+                <button class="nav-item" id="nav-subjects" onclick="app.switchTab('subjects')">
+                    <i class="fa-solid fa-shapes"></i>
+                    <span>Subjects & Courses</span>
+                </button>
+            </nav>
+
+            <!-- Quick Mini Subject List -->
+            <div class="sidebar-subjects">
+                <div class="subjects-header">
+                    <span>ACTIVE COURSES</span>
+                    <button class="btn-icon-xs" onclick="app.openSubjectModal()" title="Add Course">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+                <div class="subjects-list-mini" id="sidebar-subject-list">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Quick Focus Tracker in Sidebar -->
+            <div class="sidebar-pomo-card" onclick="app.switchTab('pomodoro')">
+                <div class="pomo-mini-header">
+                    <span><i class="fa-solid fa-brain text-amber"></i> Focus Streak</span>
+                    <strong id="sidebar-pomo-count">0 sessions</strong>
+                </div>
+                <div class="pomo-mini-progress">
+                    <div class="pomo-mini-bar" id="sidebar-pomo-bar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">
+                        <i class="fa-solid fa-user-graduate"></i>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name">Active Scholar</div>
+                        <div class="user-status"><span class="status-dot"></span> Java Spring Boot API</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Header Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="menu-toggle btn-icon" id="sidebarToggle" onclick="app.toggleSidebar()">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="page-title-wrap">
+                        <div class="greeting-badge" id="greeting-badge"><i class="fa-solid fa-sun"></i> Good Day!</div>
+                        <h1 id="page-title">Dashboard Overview</h1>
+                        <p id="page-subtitle" class="text-muted">Track your academic deadlines, tasks, notes, and study focus.</p>
+                    </div>
+                </div>
+
+                <div class="topbar-right">
+                    <div class="search-bar">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="global-search" placeholder="Search tasks, notes, courses (Press /)..." oninput="app.handleGlobalSearch(this.value)">
+                        <kbd class="search-kbd">/</kbd>
+                    </div>
+                    <button class="btn btn-secondary-icon" id="theme-toggle-btn" onclick="app.toggleTheme()" title="Toggle Dark/Light Theme">
+                        <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
+                    </button>
+                    <button class="btn btn-secondary-icon" onclick="app.switchTab('pomodoro')" title="Start Focus Timer">
+                        <i class="fa-solid fa-stopwatch text-amber"></i>
+                    </button>
+                    <button class="btn btn-primary" onclick="app.openTaskModal()">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>New Task / Assignment</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Notification Toast Container -->
+            <div id="toast-container" class="toast-container"></div>
+
+            <!-- ============================================== -->
+            <!-- TAB 1: DASHBOARD -->
+            <!-- ============================================== -->
+            <section id="tab-dashboard" class="content-tab active">
+                <!-- Daily Motivational Quote / Banner -->
+                <div class="welcome-banner">
+                    <div class="banner-content">
+                        <h2>Organize your semester. Ace your goals. 🚀</h2>
+                        <p id="daily-quote">"Success is the sum of small efforts repeated day in and day out."</p>
+                    </div>
+                    <div class="banner-actions">
+                        <button class="btn btn-glass" onclick="app.switchTab('pomodoro')">
+                            <i class="fa-solid fa-play"></i> Start 25m Focus
+                        </button>
+                        <button class="btn btn-glass" onclick="app.openTaskModal('ASSIGNMENT')">
+                            <i class="fa-solid fa-plus"></i> Log Assignment
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPI Stat Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon icon-blue">
+                            <i class="fa-solid fa-list-check"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-label">Total Tasks & Work</span>
+                            <h3 class="stat-value" id="stat-total-tasks">0</h3>
+                            <span class="stat-meta text-muted" id="stat-completion-pct">0% completed</span>
+                        </div>
+                        <div class="stat-progress">
+                            <div class="stat-progress-bar" id="stat-progress-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon icon-amber">
+                            <i class="fa-solid fa-hourglass-half"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-label">Active / In Progress</span>
+                            <h3 class="stat-value" id="stat-pending-tasks">0</h3>
+                            <span class="stat-meta text-amber" id="stat-inprogress-count">0 In Progress</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon icon-emerald">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-label">Completed Tasks</span>
+                            <h3 class="stat-value" id="stat-completed-tasks">0</h3>
+                            <span class="stat-meta text-emerald">Great work! Keep moving forward</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon icon-rose">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div class="stat-data">
+                            <span class="stat-label">Overdue Deadlines</span>
+                            <h3 class="stat-value" id="stat-overdue-tasks">0</h3>
+                            <span class="stat-meta text-rose">Requires immediate action</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Grid: Deadlines & Quick Tasks -->
+                <div class="dashboard-grid">
+                    <!-- Left Column: Urgent & Upcoming Deadlines -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <i class="fa-solid fa-fire-flame-curved text-rose"></i>
+                                <span>Upcoming Deadlines & Milestones</span>
+                            </div>
+                            <button class="btn-text-sm" onclick="app.switchTab('deadlines')">View All</button>
+                        </div>
+                        <div class="card-body" id="dash-upcoming-list">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Pinned Notes & Recent Activity -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <i class="fa-solid fa-thumbtack text-amber"></i>
+                                <span>Pinned Study Notes & Cheat Sheets</span>
+                            </div>
+                            <button class="btn-text-sm" onclick="app.switchTab('notes')">View All Notes</button>
+                        </div>
+                        <div class="card-body" id="dash-pinned-notes">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Subject Overview -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-chart-simple text-blue"></i>
+                            <span>Course Progress & Subject Workload</span>
+                        </div>
+                        <button class="btn btn-outline-sm" onclick="app.openSubjectModal()">
+                            <i class="fa-solid fa-plus"></i> Add Course
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="subjects-workload-grid" id="dash-subjects-grid">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- TAB 2: TASKS & TO-DOS (TABLE VIEW) -->
+            <!-- ============================================== -->
+            <section id="tab-tasks" class="content-tab">
+                <div class="section-toolbar">
+                    <div class="filters-group">
+                        <div class="filter-item">
+                            <label>Status</label>
+                            <select id="task-filter-status" onchange="app.filterTasks()">
+                                <option value="">All Statuses</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="IN_PROGRESS">In Progress</option>
+                                <option value="COMPLETED">Completed</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>Priority</label>
+                            <select id="task-filter-priority" onchange="app.filterTasks()">
+                                <option value="">All Priorities</option>
+                                <option value="URGENT">Urgent</option>
+                                <option value="HIGH">High</option>
+                                <option value="MEDIUM">Medium</option>
+                                <option value="LOW">Low</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>Type</label>
+                            <select id="task-filter-type" onchange="app.filterTasks()">
+                                <option value="">All Types</option>
+                                <option value="TASK">General Task</option>
+                                <option value="ASSIGNMENT">Assignment</option>
+                                <option value="PROJECT">Project</option>
+                                <option value="EXAM_PREP">Exam Prep</option>
+                                <option value="READING">Reading</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>Subject</label>
+                            <select id="task-filter-subject" onchange="app.filterTasks()">
+                                <option value="">All Subjects</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="toolbar-actions">
+                        <button class="btn btn-secondary-sm" onclick="app.switchTab('kanban')">
+                            <i class="fa-solid fa-table-columns"></i> Kanban View
+                        </button>
+                        <button class="btn btn-primary" onclick="app.openTaskModal('TASK')">
+                            <i class="fa-solid fa-plus"></i> Create Task
+                        </button>
+                    </div>
+                </div>
+
+                <div class="task-table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 48px;">Done</th>
+                                <th>Task Title</th>
+                                <th>Subject</th>
+                                <th>Type</th>
+                                <th>Priority</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                                <th style="width: 140px; text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="task-table-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                    <div class="empty-state hidden" id="task-empty-state">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                        <h3>No tasks found</h3>
+                        <p>Create your first task or clear your filter criteria.</p>
+                        <button class="btn btn-primary-sm" onclick="app.openTaskModal('TASK')">Create Task</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- TAB 3: KANBAN BOARD VIEW -->
+            <!-- ============================================== -->
+            <section id="tab-kanban" class="content-tab">
+                <div class="section-toolbar">
+                    <div class="toolbar-info">
+                        <h2>Interactive Kanban Board</h2>
+                        <p class="text-muted">Drag tasks between stages to manage your workflow</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.openTaskModal()">
+                        <i class="fa-solid fa-plus"></i> Add Item
+                    </button>
+                </div>
+
+                <div class="kanban-board">
+                    <!-- Column: Pending -->
+                    <div class="kanban-column" id="kanban-col-PENDING" ondragover="app.allowDrop(event)" ondrop="app.dropTask(event, 'PENDING')">
+                        <div class="kanban-column-header">
+                            <div class="col-title">
+                                <span class="status-circle status-pending"></span>
+                                <span>To Do</span>
+                            </div>
+                            <span class="kanban-badge" id="kanban-count-pending">0</span>
+                        </div>
+                        <div class="kanban-card-list" id="kanban-list-PENDING">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Column: In Progress -->
+                    <div class="kanban-column" id="kanban-col-IN_PROGRESS" ondragover="app.allowDrop(event)" ondrop="app.dropTask(event, 'IN_PROGRESS')">
+                        <div class="kanban-column-header">
+                            <div class="col-title">
+                                <span class="status-circle status-inprogress"></span>
+                                <span>In Progress</span>
+                            </div>
+                            <span class="kanban-badge" id="kanban-count-inprogress">0</span>
+                        </div>
+                        <div class="kanban-card-list" id="kanban-list-IN_PROGRESS">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Column: Completed -->
+                    <div class="kanban-column" id="kanban-col-COMPLETED" ondragover="app.allowDrop(event)" ondrop="app.dropTask(event, 'COMPLETED')">
+                        <div class="kanban-column-header">
+                            <div class="col-title">
+                                <span class="status-circle status-completed"></span>
+                                <span>Completed</span>
+                            </div>
+                            <span class="kanban-badge" id="kanban-count-completed">0</span>
+                        </div>
+                        <div class="kanban-card-list" id="kanban-list-COMPLETED">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- TAB 4: ASSIGNMENTS & DELIVERABLES -->
+            <!-- ============================================== -->
+            <section id="tab-assignments" class="content-tab">
+                <div class="section-toolbar">
+                    <div class="toolbar-info">
+                        <h2>Academic Assignments & Project Deliverables</h2>
+                        <p class="text-muted">Track homework, submissions, lab reports, and team projects</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.openTaskModal('ASSIGNMENT')">
+                        <i class="fa-solid fa-plus"></i> New Assignment
+                    </button>
+                </div>
+
+                <div class="assignment-cards-grid" id="assignments-grid">
+                    <!-- Populated dynamically -->
+                </div>
+                <div class="empty-state hidden" id="assignment-empty-state">
+                    <i class="fa-solid fa-file-signature"></i>
+                    <h3>No assignments logged</h3>
+                    <p>Add your upcoming homework, lab submissions, and term papers.</p>
+                    <button class="btn btn-primary-sm" onclick="app.openTaskModal('ASSIGNMENT')">Add Assignment</button>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- TAB 5: DEADLINES & TIMELINE -->
+            <!-- ============================================== -->
+            <section id="tab-deadlines" class="content-tab">
+                <div class="deadlines-timeline-view">
+                    <!-- Overdue Section -->
+                    <div class="deadline-category-group">
+                        <div class="category-title text-rose">
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                            <h3>Overdue Deadlines</h3>
+                            <span class="count-badge danger" id="deadlines-overdue-count">0</span>
+                        </div>
+                        <div class="deadlines-card-list" id="deadlines-overdue-list">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Upcoming Section -->
+                    <div class="deadline-category-group mt-5">
+                        <div class="category-title text-blue">
+                            <i class="fa-solid fa-calendar-days"></i>
+                            <h3>Upcoming Deadlines</h3>
+                            <span class="count-badge blue" id="deadlines-upcoming-count">0</span>
+                        </div>
+                        <div class="deadlines-card-list" id="deadlines-upcoming-list">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- TAB 6: POMODORO FOCUS TIMER -->
+            <!-- ============================================== -->
+            <section id="tab-pomodoro" class="content-tab">
+                <div class="pomodoro-layout">
+                    <div class="pomodoro-box">
+                        <div class="pomodoro-mode-switch">
+                            <button class="pomo-mode-btn active" id="pomo-mode-work" onclick="app.setPomoMode('work')">Study Focus (25m)</button>
+                            <button class="pomo-mode-btn" id="pomo-mode-short" onclick="app.setPomoMode('short')">Short Break (5m)</button>
+                            <button class="pomo-mode-btn" id="pomo-mode-long" onclick="app.setPomoMode('long')">Long Break (15m)</button>
+                        </div>
+
+                        <div class="pomodoro-timer-display" id="pomo-time-display">25:00</div>
+                        <div class="pomodoro-subtext" id="pomo-task-label">Deep Work Session</div>
+
+                        <div class="pomodoro-controls">
+                            <button class="btn-pomo-large" id="pomo-start-btn" onclick="app.togglePomoTimer()">
+                                <i class="fa-solid fa-play" id="pomo-icon"></i>
+                                <span id="pomo-btn-text">Start Focus</span>
+                            </button>
+                            <button class="btn-pomo-secondary" onclick="app.resetPomoTimer()" title="Reset Timer">
+                                <i class="fa-solid fa-rotate-right"></i>
+                            </button>
+                        </div>
+
+                        <div class="pomodoro-stats-strip">
+                            <div class="pomo-stat-item">
+                                <span class="pomo-stat-val" id="pomo-today-sessions">0</span>
+                                <span class="pomo-stat-lbl">Completed Sessions</span>
+                            </div>
+                            <div class="pomo-stat-item">
+                                <span class="pomo-stat-val" id="pomo-today-minutes">0m</span>
+                                <span class="pomo-stat-lbl">Focus Time</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pomodoro-task-selector card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fa-solid fa-bullseye text-amber"></i> Select Task to Work On</div>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted text-sm mb-3">Pick an active task to link your study session to:</p>
+                            <select id="pomo-active-task-select" class="w-100" onchange="app.selectPomoTask(this.value)">
+                                <option value="">-- General Study Session --</option>
+                            </select>
+                            
+                            <div class="focus-tips-box mt-4">
+                                <h4><i class="fa-solid fa-lightbulb text-amber"></i> Focus Tips:</h4>
+                                <ul>
+                                    <li>Put your phone in Do Not Disturb mode.</li>
+                                    <li>Have water and study materials ready.</li>
+                                    <li>Stick to one task until the 25m buzzer rings.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- TAB 7: STUDY NOTES & CHEAT SHEETS -->
+            <!-- ============================================== -->
+            <section id="tab-notes" class="content-tab">
+                <div class="section-toolbar">
+                    <div class="search-bar w-auto">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="notes-search" placeholder="Search notes by title, tag, content..." oninput="app.filterNotes()">
+                    </div>
+                    <div class="filter-item">
+                        <select id="notes-filter-subject" onchange="app.filterNotes()">
+                            <option value="">All Subjects</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary ml-auto" onclick="app.openNoteModal()">
+                        <i class="fa-solid fa-plus"></i> New Note
+                    </button>
+                </div>
+
+                <div class="notes-masonry-grid" id="notes-grid">
+                    <!-- Populated dynamically -->
+                </div>
+                <div class="empty-state hidden" id="notes-empty-state">
+                    <i class="fa-solid fa-book-open"></i>
+                    <h3>No notes created yet</h3>
+                    <p>Capture lecture notes, formulas, cheat sheets, and study materials.</p>
+                    <button class="btn btn-primary-sm" onclick="app.openNoteModal()">Create Study Note</button>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- TAB 8: SUBJECTS & COURSES -->
+            <!-- ============================================== -->
+            <section id="tab-subjects" class="content-tab">
+                <div class="section-toolbar">
+                    <div class="toolbar-info">
+                        <h2>Courses & Academic Subjects</h2>
+                        <p class="text-muted">Organize your semester subjects, instructor information, and color codes</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.openSubjectModal()">
+                        <i class="fa-solid fa-plus"></i> Add New Subject
+                    </button>
+                </div>
+
+                <div class="subjects-full-grid" id="subjects-grid">
+                    <!-- Populated dynamically -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- MODALS -->
+    <!-- ============================================== -->
+
+    <!-- MODAL: TASK / ASSIGNMENT CREATE & EDIT -->
+    <div class="modal-backdrop" id="taskModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 id="taskModalTitle"><i class="fa-solid fa-circle-check text-blue"></i> Create New Task</h3>
+                <button class="modal-close" onclick="app.closeModal('taskModal')">&times;</button>
+            </div>
+            <form id="taskForm" onsubmit="app.saveTask(event)">
+                <input type="hidden" id="task-id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="task-title">Title <span class="required">*</span></label>
+                        <input type="text" id="task-title" required placeholder="e.g., Complete Chapter 4 Exercises" maxlength="150">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="task-type">Task Type <span class="required">*</span></label>
+                            <select id="task-type" required>
+                                <option value="TASK">General Task</option>
+                                <option value="ASSIGNMENT">Assignment</option>
+                                <option value="PROJECT">Project Deliverable</option>
+                                <option value="EXAM_PREP">Exam Preparation</option>
+                                <option value="READING">Reading / Research</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="task-priority">Priority <span class="required">*</span></label>
+                            <select id="task-priority" required>
+                                <option value="LOW">Low</option>
+                                <option value="MEDIUM" selected>Medium</option>
+                                <option value="HIGH">High</option>
+                                <option value="URGENT">Urgent (Do First)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="task-subject">Subject / Course</label>
+                            <select id="task-subject">
+                                <option value="">-- No Subject Assigned --</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="task-status">Status</label>
+                            <select id="task-status">
+                                <option value="PENDING">Pending</option>
+                                <option value="IN_PROGRESS">In Progress</option>
+                                <option value="COMPLETED">Completed</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="task-due-date">Due Date & Time</label>
+                            <input type="datetime-local" id="task-due-date">
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="task-estimated-minutes">Estimated Duration (Minutes)</label>
+                            <input type="number" id="task-estimated-minutes" min="5" step="5" placeholder="e.g., 60">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="task-desc">Description / Instructions</label>
+                        <textarea id="task-desc" rows="3" placeholder="Add additional details, problem sets, references or guidelines..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="app.closeModal('taskModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-task">Save Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: NOTE CREATE & EDIT -->
+    <div class="modal-backdrop" id="noteModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-header">
+                <h3 id="noteModalTitle"><i class="fa-solid fa-book-open text-amber"></i> Create Study Note</h3>
+                <button class="modal-close" onclick="app.closeModal('noteModal')">&times;</button>
+            </div>
+            <form id="noteForm" onsubmit="app.saveNote(event)">
+                <input type="hidden" id="note-id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="note-title">Title <span class="required">*</span></label>
+                        <input type="text" id="note-title" required placeholder="e.g., QuickSort Partitioning Algorithm & Proof" maxlength="150">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="note-subject">Subject</label>
+                            <select id="note-subject">
+                                <option value="">-- No Subject Assigned --</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="note-tags">Tags (comma separated)</label>
+                            <input type="text" id="note-tags" placeholder="e.g., dsa, sorting, algorithms">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="note-pinned">
+                            <label for="note-pinned"><i class="fa-solid fa-thumbtack"></i> Pin this note to dashboard</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="note-content">Note Content (Markdown supported)</label>
+                        <textarea id="note-content" rows="8" placeholder="Type key concepts, definitions, formulas, or summaries..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="app.closeModal('noteModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-note">Save Note</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: SUBJECT CREATE & EDIT -->
+    <div class="modal-backdrop" id="subjectModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 id="subjectModalTitle"><i class="fa-solid fa-shapes text-indigo"></i> Add New Subject</h3>
+                <button class="modal-close" onclick="app.closeModal('subjectModal')">&times;</button>
+            </div>
+            <form id="subjectForm" onsubmit="app.saveSubject(event)">
+                <input type="hidden" id="subject-id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="subject-name">Subject / Course Name <span class="required">*</span></label>
+                        <input type="text" id="subject-name" required placeholder="e.g., Distributed Systems" maxlength="100">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="subject-code">Course Code</label>
+                            <input type="text" id="subject-code" placeholder="e.g., CS-401" maxlength="50">
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="subject-color">Accent Color</label>
+                            <div class="color-picker-wrap">
+                                <input type="color" id="subject-color" value="#6366f1">
+                                <span class="color-hint">Pick UI tag color</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="subject-instructor">Instructor / Professor</label>
+                        <input type="text" id="subject-instructor" placeholder="e.g., Dr. Jane Doe" maxlength="100">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="app.closeModal('subjectModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-subject">Save Subject</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quick Shortcuts Modal / Helper -->
+    <div class="keyboard-hints">
+        <span>Press <kbd>/</kbd> to Search</span>
+        <span>Press <kbd>N</kbd> for New Task</span>
+    </div>
+
+    <!-- Frontend Application Logic -->
+    <script src="js/app.js"></script>
+</body>
+</html>
